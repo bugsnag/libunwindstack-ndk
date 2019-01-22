@@ -18,6 +18,7 @@
 #define _LIBUNWINDSTACK_REGS_INFO_H
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <unwindstack/Regs.h>
 

@@ -55,7 +55,7 @@ struct MapInfo {
   // instead of a portion of the file.
   uint64_t elf_offset = 0;
 
-  std::atomic_uint64_t load_bias;
+  std::atomic<std::uint64_t> load_bias;
 
   // This function guarantees it will never return nullptr.
   Elf* GetElf(const std::shared_ptr<Memory>& process_memory, bool init_gnu_debugdata = false);

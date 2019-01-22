@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include "unistdfix.h"
 #include <sys/syscall.h>
+#include <asm/unistd.h>
 
 #include <algorithm>
 #include <memory>
