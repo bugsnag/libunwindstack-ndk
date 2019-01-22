@@ -24,7 +24,16 @@
 #include <unistd.h>
 #include "unistdfix.h"
 #include <sys/syscall.h>
-#include <asm/unistd.h>
+#ifndef __NR_process_vm_readv
+#ifdef __i386__
+#define __NR_process_vm_readv 347
+#elif defined(__ILP32__)
+#define __X32_SYSCALL_BIT 0x40000000
+#define __NR_process_vm_readv (__X32_SYSCALL_BIT + 539)
+#else
+#define __NR_process_vm_readv 310
+#endif
+#endif
 
 #include <algorithm>
 #include <memory>
