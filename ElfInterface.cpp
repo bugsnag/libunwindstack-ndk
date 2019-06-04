@@ -41,34 +41,6 @@ ElfInterface::~ElfInterface() {
   }
 }
 
-bool ElfInterface::IsValidPc(uint64_t pc) {
-  if (!pt_loads_.empty()) {
-    for (auto& entry : pt_loads_) {
-      uint64_t start = entry.second.table_offset;
-      uint64_t end = start + entry.second.table_size;
-      if (pc >= start && pc < end) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // No PT_LOAD data, look for a fde for this pc in the section data.
-  if (debug_frame_ != nullptr && debug_frame_->GetFdeFromPc(pc) != nullptr) {
-    return true;
-  }
-
-  if (eh_frame_ != nullptr && eh_frame_->GetFdeFromPc(pc) != nullptr) {
-    return true;
-  }
-
-  return false;
-}
-
-Memory* ElfInterface::CreateGnuDebugdataMemory() {
-    return nullptr;
-}
-
 template <typename AddressType>
 void ElfInterface::InitHeadersWithTemplate() {
   if (eh_frame_hdr_offset_ != 0) {
