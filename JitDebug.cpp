@@ -149,14 +149,12 @@ void JitDebug::SetArch(ArchEnum arch) {
       break;
 
     case ARCH_ARM:
-    case ARCH_MIPS:
       read_descriptor_func_ = &JitDebug::ReadDescriptor32;
       read_entry_func_ = &JitDebug::ReadEntry32Pad;
       break;
 
     case ARCH_ARM64:
     case ARCH_X86_64:
-    case ARCH_MIPS64:
       read_descriptor_func_ = &JitDebug::ReadDescriptor64;
       read_entry_func_ = &JitDebug::ReadEntry64;
       break;

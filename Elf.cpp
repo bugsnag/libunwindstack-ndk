@@ -256,9 +256,6 @@ ElfInterface* Elf::CreateInterfaceFromMemory(Memory* memory) {
     } else if (e_machine == EM_386) {
       arch_ = ARCH_X86;
       interface.reset(new ElfInterface32(memory));
-    } else if (e_machine == EM_MIPS) {
-      arch_ = ARCH_MIPS;
-      interface.reset(new ElfInterface32(memory));
     } else {
       // Unsupported.
       ALOGI("32 bit elf that is neither arm nor x86 nor mips: e_machine = %d\n", e_machine);
@@ -275,8 +272,6 @@ ElfInterface* Elf::CreateInterfaceFromMemory(Memory* memory) {
       arch_ = ARCH_ARM64;
     } else if (e_machine == EM_X86_64) {
       arch_ = ARCH_X86_64;
-    } else if (e_machine == EM_MIPS) {
-      arch_ = ARCH_MIPS64;
     } else {
       // Unsupported.
       ALOGI("64 bit elf that is neither aarch64 nor x86_64 nor mips64: e_machine = %d\n",

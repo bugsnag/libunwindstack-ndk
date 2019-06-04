@@ -44,8 +44,6 @@ enum ArchEnum : uint8_t {
   ARCH_ARM64,
   ARCH_X86,
   ARCH_X86_64,
-  ARCH_MIPS,
-  ARCH_MIPS64,
 };
 
 class Elf {
