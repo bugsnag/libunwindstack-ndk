@@ -29,7 +29,6 @@
 #include <unwindstack/Memory.h>
 #include <unwindstack/Regs.h>
 
-#include "DwarfDebugFrame.h"
 #include "DwarfEhFrame.h"
 #include "DwarfEhFrameWithHdr.h"
 #include "Symbols.h"
@@ -93,15 +92,6 @@ void ElfInterface::InitHeadersWithTemplate() {
     eh_frame_hdr_size_ = static_cast<uint64_t>(-1);
     eh_frame_offset_ = 0;
     eh_frame_size_ = static_cast<uint64_t>(-1);
-  }
-
-  if (debug_frame_offset_ != 0) {
-    debug_frame_.reset(new DwarfDebugFrame<AddressType>(memory_));
-    if (!debug_frame_->Init(debug_frame_offset_, debug_frame_size_)) {
-      debug_frame_.reset(nullptr);
-      debug_frame_offset_ = 0;
-      debug_frame_size_ = static_cast<uint64_t>(-1);
-    }
   }
 }
 

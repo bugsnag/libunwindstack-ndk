@@ -5,7 +5,6 @@ include_directories(${UNWINDSTACK_ROOT} ${UNWINDSTACK_ROOT}/include)
 file(GLOB UNWINDSTACK_SOURCES
     ${UNWINDSTACK_ROOT}/ArmExidx.cpp
     ${UNWINDSTACK_ROOT}/DwarfCfa.cpp
-    ${UNWINDSTACK_ROOT}/DwarfDebugFrame.cpp
     ${UNWINDSTACK_ROOT}/DwarfEhFrame.cpp
     ${UNWINDSTACK_ROOT}/DwarfMemory.cpp
     ${UNWINDSTACK_ROOT}/DwarfOp.cpp
