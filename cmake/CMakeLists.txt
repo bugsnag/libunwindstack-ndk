@@ -20,7 +20,6 @@ file(GLOB UNWINDSTACK_SOURCES
     ${UNWINDSTACK_ROOT}/Symbols.cpp
     ${UNWINDSTACK_ROOT}/ElfInterfaceArm.cpp
     ${UNWINDSTACK_ROOT}/android-base/stringprintf.cpp
-    ${UNWINDSTACK_ROOT}/getline.c
     ${UNWINDSTACK_ROOT}/RegsArm.cpp
     ${UNWINDSTACK_ROOT}/RegsArm64.cpp
     ${UNWINDSTACK_ROOT}/RegsX86.cpp
