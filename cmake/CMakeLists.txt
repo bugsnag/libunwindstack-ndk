@@ -1,15 +1,10 @@
 set(UNWINDSTACK_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../)
 
-if (NOT TARGET lzma)
-    add_subdirectory(lzma)
-endif()
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-include_directories(${UNWINDSTACK_ROOT} ${UNWINDSTACK_ROOT}/include ${UNWINDSTACK_ROOT}/lzma/C)
+include_directories(${UNWINDSTACK_ROOT} ${UNWINDSTACK_ROOT}/include)
 file(GLOB UNWINDSTACK_SOURCES
     ${UNWINDSTACK_ROOT}/ArmExidx.cpp
     ${UNWINDSTACK_ROOT}/DwarfCfa.cpp
-    ${UNWINDSTACK_ROOT}/DwarfDebugFrame.cpp
     ${UNWINDSTACK_ROOT}/DwarfEhFrame.cpp
     ${UNWINDSTACK_ROOT}/DwarfMemory.cpp
     ${UNWINDSTACK_ROOT}/DwarfOp.cpp
@@ -24,11 +19,8 @@ file(GLOB UNWINDSTACK_SOURCES
     ${UNWINDSTACK_ROOT}/Symbols.cpp
     ${UNWINDSTACK_ROOT}/ElfInterfaceArm.cpp
     ${UNWINDSTACK_ROOT}/android-base/stringprintf.cpp
-    ${UNWINDSTACK_ROOT}/getline.c
     ${UNWINDSTACK_ROOT}/RegsArm.cpp
     ${UNWINDSTACK_ROOT}/RegsArm64.cpp
-    ${UNWINDSTACK_ROOT}/RegsMips.cpp
-    ${UNWINDSTACK_ROOT}/RegsMips64.cpp
     ${UNWINDSTACK_ROOT}/RegsX86.cpp
     ${UNWINDSTACK_ROOT}/RegsX86_64.cpp
     ${UNWINDSTACK_ROOT}/DwarfEhFrameWithHdr.cpp
@@ -40,4 +32,3 @@ else()
 endif()
 
 add_library(unwindstack STATIC ${UNWINDSTACK_SOURCES})
-target_link_libraries(unwindstack lzma)

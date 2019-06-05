@@ -22,10 +22,6 @@
 #include <string>
 #include <utility>
 
-#include <7zCrc.h>
-#include <Xz.h>
-#include <XzCrc64.h>
-
 #include <unwindstack/DwarfError.h>
 #include <unwindstack/DwarfSection.h>
 #include <unwindstack/ElfInterface.h>
@@ -33,7 +29,6 @@
 #include <unwindstack/Memory.h>
 #include <unwindstack/Regs.h>
 
-#include "DwarfDebugFrame.h"
 #include "DwarfEhFrame.h"
 #include "DwarfEhFrameWithHdr.h"
 #include "Symbols.h"
@@ -44,84 +39,6 @@ ElfInterface::~ElfInterface() {
   for (auto symbol : symbols_) {
     delete symbol;
   }
-}
-
-bool ElfInterface::IsValidPc(uint64_t pc) {
-  if (!pt_loads_.empty()) {
-    for (auto& entry : pt_loads_) {
-      uint64_t start = entry.second.table_offset;
-      uint64_t end = start + entry.second.table_size;
-      if (pc >= start && pc < end) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // No PT_LOAD data, look for a fde for this pc in the section data.
-  if (debug_frame_ != nullptr && debug_frame_->GetFdeFromPc(pc) != nullptr) {
-    return true;
-  }
-
-  if (eh_frame_ != nullptr && eh_frame_->GetFdeFromPc(pc) != nullptr) {
-    return true;
-  }
-
-  return false;
-}
-
-Memory* ElfInterface::CreateGnuDebugdataMemory() {
-  if (gnu_debugdata_offset_ == 0 || gnu_debugdata_size_ == 0) {
-    return nullptr;
-  }
-
-  // TODO: Only call these initialization functions once.
-  CrcGenerateTable();
-  Crc64GenerateTable();
-
-  std::vector<uint8_t> src(gnu_debugdata_size_);
-  if (!memory_->ReadFully(gnu_debugdata_offset_, src.data(), gnu_debugdata_size_)) {
-    gnu_debugdata_offset_ = 0;
-    gnu_debugdata_size_ = static_cast<uint64_t>(-1);
-    return nullptr;
-  }
-
-  ISzAlloc alloc;
-  CXzUnpacker state;
-  alloc.Alloc = [](void*, size_t size) { return malloc(size); };
-  alloc.Free = [](void*, void* ptr) { return free(ptr); };
-
-  XzUnpacker_Construct(&state, &alloc);
-
-  std::unique_ptr<MemoryBuffer> dst(new MemoryBuffer);
-  int return_val;
-  size_t src_offset = 0;
-  size_t dst_offset = 0;
-  ECoderStatus status;
-  dst->Resize(5 * gnu_debugdata_size_);
-  do {
-    size_t src_remaining = src.size() - src_offset;
-    size_t dst_remaining = dst->Size() - dst_offset;
-    if (dst_remaining < 2 * gnu_debugdata_size_) {
-      dst->Resize(dst->Size() + 2 * gnu_debugdata_size_);
-      dst_remaining += 2 * gnu_debugdata_size_;
-    }
-    return_val = XzUnpacker_Code(&state, dst->GetPtr(dst_offset), &dst_remaining, &src[src_offset],
-                                 &src_remaining, CODER_FINISH_ANY, &status);
-    src_offset += src_remaining;
-    dst_offset += dst_remaining;
-  } while (return_val == SZ_OK && status == CODER_STATUS_NOT_FINISHED);
-  XzUnpacker_Free(&state);
-  if (return_val != SZ_OK || !XzUnpacker_IsStreamWasFinished(&state)) {
-    gnu_debugdata_offset_ = 0;
-    gnu_debugdata_size_ = static_cast<uint64_t>(-1);
-    return nullptr;
-  }
-
-  // Shrink back down to the exact size.
-  dst->Resize(dst_offset);
-
-  return dst.release();
 }
 
 template <typename AddressType>
@@ -147,15 +64,6 @@ void ElfInterface::InitHeadersWithTemplate() {
     eh_frame_hdr_size_ = static_cast<uint64_t>(-1);
     eh_frame_offset_ = 0;
     eh_frame_size_ = static_cast<uint64_t>(-1);
-  }
-
-  if (debug_frame_offset_ != 0) {
-    debug_frame_.reset(new DwarfDebugFrame<AddressType>(memory_));
-    if (!debug_frame_->Init(debug_frame_offset_, debug_frame_size_)) {
-      debug_frame_.reset(nullptr);
-      debug_frame_offset_ = 0;
-      debug_frame_size_ = static_cast<uint64_t>(-1);
-    }
   }
 }
 

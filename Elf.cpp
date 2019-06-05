@@ -55,47 +55,11 @@ bool Elf::Init(bool init_gnu_debugdata) {
   valid_ = interface_->Init(&load_bias_);
   if (valid_) {
     interface_->InitHeaders();
-    if (init_gnu_debugdata) {
-      InitGnuDebugdata();
-    } else {
-      gnu_debugdata_interface_.reset(nullptr);
-    }
+    gnu_debugdata_interface_.reset(nullptr);
   } else {
     interface_.reset(nullptr);
   }
   return valid_;
-}
-
-// It is expensive to initialize the .gnu_debugdata section. Provide a method
-// to initialize this data separately.
-void Elf::InitGnuDebugdata() {
-  if (!valid_ || interface_->gnu_debugdata_offset() == 0) {
-    return;
-  }
-
-  gnu_debugdata_memory_.reset(interface_->CreateGnuDebugdataMemory());
-  gnu_debugdata_interface_.reset(CreateInterfaceFromMemory(gnu_debugdata_memory_.get()));
-  ElfInterface* gnu = gnu_debugdata_interface_.get();
-  if (gnu == nullptr) {
-    return;
-  }
-
-  // Ignore the load_bias from the compressed section, the correct load bias
-  // is in the uncompressed data.
-  uint64_t load_bias;
-  if (gnu->Init(&load_bias)) {
-    gnu->InitHeaders();
-    interface_->SetGnuDebugdataInterface(gnu);
-  } else {
-    // Free all of the memory associated with the gnu_debugdata section.
-    gnu_debugdata_memory_.reset(nullptr);
-    gnu_debugdata_interface_.reset(nullptr);
-  }
-}
-
-bool Elf::GetSoname(std::string* name) {
-  std::lock_guard<std::mutex> guard(lock_);
-  return valid_ && interface_->GetSoname(name);
 }
 
 uint64_t Elf::GetRelPc(uint64_t pc, const MapInfo* map_info) {
@@ -107,57 +71,6 @@ bool Elf::GetFunctionName(uint64_t addr, std::string* name, uint64_t* func_offse
   return valid_ && (interface_->GetFunctionName(addr, load_bias_, name, func_offset) ||
                     (gnu_debugdata_interface_ && gnu_debugdata_interface_->GetFunctionName(
                                                      addr, load_bias_, name, func_offset)));
-}
-
-bool Elf::GetGlobalVariable(const std::string& name, uint64_t* memory_address) {
-  if (!valid_) {
-    return false;
-  }
-
-  if (!interface_->GetGlobalVariable(name, memory_address) &&
-      (gnu_debugdata_interface_ == nullptr ||
-       !gnu_debugdata_interface_->GetGlobalVariable(name, memory_address))) {
-    return false;
-  }
-
-  // Adjust by the load bias.
-  if (*memory_address < load_bias_) {
-    return false;
-  }
-
-  *memory_address -= load_bias_;
-
-  // If this winds up in the dynamic section, then we might need to adjust
-  // the address.
-  uint64_t dynamic_end = interface_->dynamic_vaddr() + interface_->dynamic_size();
-  if (*memory_address >= interface_->dynamic_vaddr() && *memory_address < dynamic_end) {
-    if (interface_->dynamic_vaddr() > interface_->dynamic_offset()) {
-      *memory_address -= interface_->dynamic_vaddr() - interface_->dynamic_offset();
-    } else {
-      *memory_address += interface_->dynamic_offset() - interface_->dynamic_vaddr();
-    }
-  }
-  return true;
-}
-
-void Elf::GetLastError(ErrorData* data) {
-  if (valid_) {
-    *data = interface_->last_error();
-  }
-}
-
-ErrorCode Elf::GetLastErrorCode() {
-  if (valid_) {
-    return interface_->LastErrorCode();
-  }
-  return ERROR_NONE;
-}
-
-uint64_t Elf::GetLastErrorAddress() {
-  if (valid_) {
-    return interface_->LastErrorAddress();
-  }
-  return 0;
 }
 
 // The relative pc is always relative to the start of the map from which it comes.
@@ -217,23 +130,6 @@ void Elf::GetInfo(Memory* memory, bool* valid, uint64_t* size) {
   }
 }
 
-bool Elf::IsValidPc(uint64_t pc) {
-  if (!valid_ || pc < load_bias_) {
-    return false;
-  }
-  pc -= load_bias_;
-
-  if (interface_->IsValidPc(pc)) {
-    return true;
-  }
-
-  if (gnu_debugdata_interface_ != nullptr && gnu_debugdata_interface_->IsValidPc(pc)) {
-    return true;
-  }
-
-  return false;
-}
-
 ElfInterface* Elf::CreateInterfaceFromMemory(Memory* memory) {
   if (!IsValidElf(memory)) {
     return nullptr;
@@ -256,9 +152,6 @@ ElfInterface* Elf::CreateInterfaceFromMemory(Memory* memory) {
     } else if (e_machine == EM_386) {
       arch_ = ARCH_X86;
       interface.reset(new ElfInterface32(memory));
-    } else if (e_machine == EM_MIPS) {
-      arch_ = ARCH_MIPS;
-      interface.reset(new ElfInterface32(memory));
     } else {
       // Unsupported.
       ALOGI("32 bit elf that is neither arm nor x86 nor mips: e_machine = %d\n", e_machine);
@@ -275,8 +168,6 @@ ElfInterface* Elf::CreateInterfaceFromMemory(Memory* memory) {
       arch_ = ARCH_ARM64;
     } else if (e_machine == EM_X86_64) {
       arch_ = ARCH_X86_64;
-    } else if (e_machine == EM_MIPS) {
-      arch_ = ARCH_MIPS64;
     } else {
       // Unsupported.
       ALOGI("64 bit elf that is neither aarch64 nor x86_64 nor mips64: e_machine = %d\n",
@@ -305,18 +196,6 @@ uint64_t Elf::GetLoadBias(Memory* memory) {
     return ElfInterface::GetLoadBias<Elf64_Ehdr, Elf64_Phdr>(memory);
   }
   return 0;
-}
-
-void Elf::SetCachingEnabled(bool enable) {
-  if (!cache_enabled_ && enable) {
-    cache_enabled_ = true;
-    cache_ = new std::unordered_map<std::string, std::pair<std::shared_ptr<Elf>, bool>>;
-    cache_lock_ = new std::mutex;
-  } else if (cache_enabled_ && !enable) {
-    cache_enabled_ = false;
-    delete cache_;
-    delete cache_lock_;
-  }
 }
 
 void Elf::CacheLock() {

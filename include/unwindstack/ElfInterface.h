@@ -56,37 +56,13 @@ class ElfInterface {
 
   virtual void InitHeaders() = 0;
 
-  virtual bool GetSoname(std::string* name) = 0;
-
   virtual bool GetFunctionName(uint64_t addr, uint64_t load_bias, std::string* name,
                                uint64_t* offset) = 0;
-
-  virtual bool GetGlobalVariable(const std::string& name, uint64_t* memory_address) = 0;
 
   virtual bool Step(uint64_t rel_pc, uint64_t load_bias, Regs* regs, Memory* process_memory,
                     bool* finished);
 
-  virtual bool IsValidPc(uint64_t pc);
-
-  Memory* CreateGnuDebugdataMemory();
-
   Memory* memory() { return memory_; }
-
-  const std::unordered_map<uint64_t, LoadInfo>& pt_loads() { return pt_loads_; }
-
-  void SetGnuDebugdataInterface(ElfInterface* interface) { gnu_debugdata_interface_ = interface; }
-
-  uint64_t dynamic_offset() { return dynamic_offset_; }
-  uint64_t dynamic_vaddr() { return dynamic_vaddr_; }
-  uint64_t dynamic_size() { return dynamic_size_; }
-  uint64_t eh_frame_hdr_offset() { return eh_frame_hdr_offset_; }
-  uint64_t eh_frame_hdr_size() { return eh_frame_hdr_size_; }
-  uint64_t eh_frame_offset() { return eh_frame_offset_; }
-  uint64_t eh_frame_size() { return eh_frame_size_; }
-  uint64_t debug_frame_offset() { return debug_frame_offset_; }
-  uint64_t debug_frame_size() { return debug_frame_size_; }
-  uint64_t gnu_debugdata_offset() { return gnu_debugdata_offset_; }
-  uint64_t gnu_debugdata_size() { return gnu_debugdata_size_; }
 
   DwarfSection* eh_frame() { return eh_frame_.get(); }
   DwarfSection* debug_frame() { return debug_frame_.get(); }
@@ -171,17 +147,9 @@ class ElfInterface32 : public ElfInterface {
 
   void InitHeaders() override { ElfInterface::InitHeadersWithTemplate<uint32_t>(); }
 
-  bool GetSoname(std::string* soname) override {
-    return ElfInterface::GetSonameWithTemplate<Elf32_Dyn>(soname);
-  }
-
   bool GetFunctionName(uint64_t addr, uint64_t load_bias, std::string* name,
                        uint64_t* func_offset) override {
     return ElfInterface::GetFunctionNameWithTemplate<Elf32_Sym>(addr, load_bias, name, func_offset);
-  }
-
-  bool GetGlobalVariable(const std::string& name, uint64_t* memory_address) override {
-    return ElfInterface::GetGlobalVariableWithTemplate<Elf32_Sym>(name, memory_address);
   }
 
   static void GetMaxSize(Memory* memory, uint64_t* size) {
@@ -200,17 +168,9 @@ class ElfInterface64 : public ElfInterface {
 
   void InitHeaders() override { ElfInterface::InitHeadersWithTemplate<uint64_t>(); }
 
-  bool GetSoname(std::string* soname) override {
-    return ElfInterface::GetSonameWithTemplate<Elf64_Dyn>(soname);
-  }
-
   bool GetFunctionName(uint64_t addr, uint64_t load_bias, std::string* name,
                        uint64_t* func_offset) override {
     return ElfInterface::GetFunctionNameWithTemplate<Elf64_Sym>(addr, load_bias, name, func_offset);
-  }
-
-  bool GetGlobalVariable(const std::string& name, uint64_t* memory_address) override {
-    return ElfInterface::GetGlobalVariableWithTemplate<Elf64_Sym>(name, memory_address);
   }
 
   static void GetMaxSize(Memory* memory, uint64_t* size) {

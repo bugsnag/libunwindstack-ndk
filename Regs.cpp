@@ -28,21 +28,17 @@
 #include <unwindstack/Regs.h>
 #include <unwindstack/RegsArm.h>
 #include <unwindstack/RegsArm64.h>
-#include <unwindstack/RegsMips.h>
-#include <unwindstack/RegsMips64.h>
 #include <unwindstack/RegsX86.h>
 #include <unwindstack/RegsX86_64.h>
 #include <unwindstack/UserArm.h>
 #include <unwindstack/UserArm64.h>
-#include <unwindstack/UserMips.h>
-#include <unwindstack/UserMips64.h>
 #include <unwindstack/UserX86.h>
 #include <unwindstack/UserX86_64.h>
 
 namespace unwindstack {
 
 // The largest user structure.
-constexpr size_t MAX_USER_REGS_SIZE = sizeof(mips64_user_regs) + 10;
+constexpr size_t MAX_USER_REGS_SIZE = sizeof(arm64_user_regs) + 10;
 
 // This function assumes that reg_data is already aligned to a 64 bit value.
 // If not this could crash with an unaligned access.
@@ -69,10 +65,6 @@ Regs* Regs::RemoteGet(pid_t pid) {
     return RegsArm::Read(buffer.data());
   case ARCH_ARM64:
     return RegsArm64::Read(buffer.data());
-  case ARCH_MIPS:
-    return RegsMips::Read(buffer.data());
-  case ARCH_MIPS64:
-    return RegsMips64::Read(buffer.data());
   default:
     return nullptr;
   }
@@ -88,10 +80,6 @@ Regs* Regs::CreateFromUcontext(ArchEnum arch, void* ucontext) {
       return RegsArm::CreateFromUcontext(ucontext);
     case ARCH_ARM64:
       return RegsArm64::CreateFromUcontext(ucontext);
-    case ARCH_MIPS:
-      return RegsMips::CreateFromUcontext(ucontext);
-    case ARCH_MIPS64:
-      return RegsMips64::CreateFromUcontext(ucontext);
     case ARCH_UNKNOWN:
     default:
       return nullptr;
@@ -107,10 +95,6 @@ ArchEnum Regs::CurrentArch() {
   return ARCH_X86;
 #elif defined(__x86_64__)
   return ARCH_X86_64;
-#elif defined(__mips__) && !defined(__LP64__)
-  return ARCH_MIPS;
-#elif defined(__mips__) && defined(__LP64__)
-  return ARCH_MIPS64;
 #else
   abort();
 #endif
@@ -126,10 +110,6 @@ Regs* Regs::CreateFromLocal() {
   regs = new RegsX86();
 #elif defined(__x86_64__)
   regs = new RegsX86_64();
-#elif defined(__mips__) && !defined(__LP64__)
-  regs = new RegsMips();
-#elif defined(__mips__) && defined(__LP64__)
-  regs = new RegsMips64();
 #else
   abort();
 #endif

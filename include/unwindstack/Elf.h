@@ -44,8 +44,6 @@ enum ArchEnum : uint8_t {
   ARCH_ARM64,
   ARCH_X86,
   ARCH_X86_64,
-  ARCH_MIPS,
-  ARCH_MIPS64,
 };
 
 class Elf {
@@ -55,13 +53,7 @@ class Elf {
 
   bool Init(bool init_gnu_debugdata);
 
-  void InitGnuDebugdata();
-
-  bool GetSoname(std::string* name);
-
   bool GetFunctionName(uint64_t addr, std::string* name, uint64_t* func_offset);
-
-  bool GetGlobalVariable(const std::string& name, uint64_t* memory_address);
 
   uint64_t GetRelPc(uint64_t pc, const MapInfo* map_info);
 
@@ -72,17 +64,7 @@ class Elf {
 
   uint64_t GetLoadBias() { return load_bias_; }
 
-  bool IsValidPc(uint64_t pc);
-
-  void GetLastError(ErrorData* data);
-  ErrorCode GetLastErrorCode();
-  uint64_t GetLastErrorAddress();
-
   bool valid() { return valid_; }
-
-  uint32_t machine_type() { return machine_type_; }
-
-  uint8_t class_type() { return class_type_; }
 
   ArchEnum arch() { return arch_; }
 
@@ -90,15 +72,12 @@ class Elf {
 
   ElfInterface* interface() { return interface_.get(); }
 
-  ElfInterface* gnu_debugdata_interface() { return gnu_debugdata_interface_.get(); }
-
   static bool IsValidElf(Memory* memory);
 
   static void GetInfo(Memory* memory, bool* valid, uint64_t* size);
 
   static uint64_t GetLoadBias(Memory* memory);
 
-  static void SetCachingEnabled(bool enable);
   static bool CachingEnabled() { return cache_enabled_; }
 
   static void CacheLock();
@@ -118,7 +97,6 @@ class Elf {
   // Protect calls that can modify internal state of the interface object.
   std::mutex lock_;
 
-  std::unique_ptr<Memory> gnu_debugdata_memory_;
   std::unique_ptr<ElfInterface> gnu_debugdata_interface_;
 
   static bool cache_enabled_;
