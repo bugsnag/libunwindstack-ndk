@@ -39,16 +39,16 @@
 
 #include <unwindstack/Log.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/MemoryLocal.h>
+#include <unwindstack/MemoryRemote.h>
 
 #include "Check.h"
 #include "MemoryBuffer.h"
 #include "MemoryCache.h"
 #include "MemoryFileAtOffset.h"
-#include "MemoryLocal.h"
 #include "MemoryOffline.h"
 #include "MemoryOfflineBuffer.h"
 #include "MemoryRange.h"
-#include "MemoryRemote.h"
 #include "MemoryXz.h"
 
 namespace unwindstack {
