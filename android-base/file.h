@@ -58,23 +58,6 @@ class TemporaryFile {
   DISALLOW_COPY_AND_ASSIGN(TemporaryFile);
 };
 
-class TemporaryDir {
- public:
-  TemporaryDir();
-  ~TemporaryDir();
-  // Don't remove the temporary dir in the destructor.
-  void DoNotRemove() { remove_dir_and_contents_ = false; }
-
-  char path[1024];
-
- private:
-  bool init(const std::string& tmp_dir);
-
-  bool remove_dir_and_contents_ = true;
-
-  DISALLOW_COPY_AND_ASSIGN(TemporaryDir);
-};
-
 namespace android {
 namespace base {
 
