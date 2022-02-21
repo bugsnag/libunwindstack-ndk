@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "android-base/file.h"
+#include "file.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -44,10 +44,10 @@
 #define OS_PATH_SEPARATOR '/'
 #endif
 
-#include "android-base/logging.h"  // and must be after windows.h for ERROR
-#include "android-base/macros.h"   // For TEMP_FAILURE_RETRY on Darwin.
-#include "android-base/unique_fd.h"
-#include "android-base/utf8.h"
+#include "logging.h" // and must be after windows.h for ERROR
+#include "macros.h"  // For TEMP_FAILURE_RETRY on Darwin.
+#include "unique_fd.h"
+#include "utf8.h"
 
 namespace {
 
