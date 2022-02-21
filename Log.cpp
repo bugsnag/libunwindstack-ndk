@@ -21,11 +21,8 @@
 #include <string>
 
 #define LOG_TAG "unwind"
-#include <log/log.h>
+#include <android/log.h>
 
-#if defined(__BIONIC__)
-#include <async_safe/log.h>
-#endif
 #include <android-base/stringprintf.h>
 
 #include <unwindstack/Log.h>
@@ -40,37 +37,8 @@ void log_to_stdout(bool enable) {
 
 // Send the data to the log.
 void log(uint8_t indent, const char* format, ...) {
-  std::string real_format;
-  if (indent > 0) {
-    real_format = android::base::StringPrintf("%*s%s", 2 * indent, " ", format);
-  } else {
-    real_format = format;
-  }
-  va_list args;
-  va_start(args, format);
-  if (g_print_to_stdout) {
-    real_format += '\n';
-    vprintf(real_format.c_str(), args);
-  } else {
-    LOG_PRI_VA(ANDROID_LOG_INFO, LOG_TAG, real_format.c_str(), args);
-  }
-  va_end(args);
 }
 
-#if defined(__BIONIC__)
-void log_async_safe(const char* format, ...) {
-  if (g_print_to_stdout) {
-    // Printing to stdout is never async safe, so throw the message away.
-    return;
-  }
-
-  va_list args;
-  va_start(args, format);
-  async_safe_format_log_va_list(ANDROID_LOG_ERROR, "libunwindstack", format, args);
-  va_end(args);
-}
-#else
 void log_async_safe(const char*, ...) {}
-#endif
 
 }  // namespace unwindstack

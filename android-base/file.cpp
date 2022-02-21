@@ -230,22 +230,18 @@ bool WriteStringToFile(const std::string& content, const std::string& path,
               (follow_symlinks ? 0 : O_NOFOLLOW);
   android::base::unique_fd fd(TEMP_FAILURE_RETRY(open(path.c_str(), flags, mode)));
   if (fd == -1) {
-    PLOG(ERROR) << "android::WriteStringToFile open failed";
     return false;
   }
 
   // We do an explicit fchmod here because we assume that the caller really
   // meant what they said and doesn't want the umask-influenced mode.
   if (fchmod(fd, mode) == -1) {
-    PLOG(ERROR) << "android::WriteStringToFile fchmod failed";
     return CleanUpAfterFailedWrite(path);
   }
   if (fchown(fd, owner, group) == -1) {
-    PLOG(ERROR) << "android::WriteStringToFile fchown failed";
     return CleanUpAfterFailedWrite(path);
   }
   if (!WriteStringToFd(content, fd)) {
-    PLOG(ERROR) << "android::WriteStringToFile write failed";
     return CleanUpAfterFailedWrite(path);
   }
   return true;
