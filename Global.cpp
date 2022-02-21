@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include <android-base/file.h>
 #include <unwindstack/Global.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
@@ -48,7 +49,7 @@ bool Global::Searchable(const std::string& name) {
     return false;
   }
 
-  const char* base_name = basename(name.c_str());
+  auto base_name = android::base::Basename(name);
   for (const std::string& lib : search_libs_) {
     if (base_name == lib) {
       return true;
