@@ -46,8 +46,6 @@ class MemoryCacheBase : public Memory {
     return CachedRead(addr, dst, size);
   }
 
-  long ReadTag(uint64_t addr) override { return impl_->ReadTag(addr); }
-
  protected:
   constexpr static size_t kCacheBits = 12;
   constexpr static size_t kCacheMask = (1 << kCacheBits) - 1;
