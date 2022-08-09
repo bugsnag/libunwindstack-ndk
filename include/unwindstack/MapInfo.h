@@ -99,6 +99,8 @@ class MapInfo {
   inline void set_name(SharedString& value) { name_ = value; }
   inline void set_name(const char* value) { name_ = value; }
 
+  inline ElfFields* elf_fields() { return elf_fields_.load(); }
+
   inline std::shared_ptr<Elf>& elf() { return GetElfFields().elf_; }
   inline void set_elf(std::shared_ptr<Elf>& value) { GetElfFields().elf_ = value; }
   inline void set_elf(Elf* value) { GetElfFields().elf_.reset(value); }
