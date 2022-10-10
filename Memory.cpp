@@ -356,7 +356,7 @@ size_t MemoryRemote::Read(uint64_t addr, void* dst, size_t size) {
 
 size_t MemoryLocal::Read(uint64_t addr, void* dst, size_t size) {
   size_t result = ProcessVmRead(getpid(), addr, dst, size);
-  if (!result && size) {
+  if (!result && size && addr && errno != EFAULT) {
     memcpy(dst, (void *)addr, size);
     result = size;
   }
