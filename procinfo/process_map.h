@@ -63,11 +63,11 @@ typedef std::function<void(const MapInfo&)> MapInfoCallback;
 typedef std::function<void(uint64_t start, uint64_t end, uint16_t flags, uint64_t pgoff,
                       ino_t inode, const char* name, bool shared)> MapInfoParamsCallback;
 
-static inline bool PassSpace(char** p) {
+static inline bool PassSpace(char** p, const char* end_ptr) {
   if (**p != ' ') {
     return false;
   }
-  while (**p == ' ') {
+  while (*p < end_ptr && **p == ' ') {
     (*p)++;
   }
   return true;
@@ -89,7 +89,7 @@ static inline bool PassXdigit(char** p) {
 //
 // Example of how a parsed line look line:
 // 00400000-00409000 r-xp 00000000 fc:00 426998  /usr/lib/gvfs/gvfsd-http
-static inline bool ParseMapsFileLine(char* p, uint64_t& start_addr, uint64_t& end_addr, uint16_t& flags,
+static inline bool ParseMapsFileLine(char* p, const char *end_p, uint64_t& start_addr, uint64_t& end_addr, uint16_t& flags,
                       uint64_t& pgoff, ino_t& inode, char** name, bool& shared, char** next_line) {
   // Make end of line be null
   *next_line = strchr(p, '\n');
@@ -111,7 +111,7 @@ static inline bool ParseMapsFileLine(char* p, uint64_t& start_addr, uint64_t& en
     return false;
   }
   p = end;
-  if (!PassSpace(&p)) {
+  if (!PassSpace(&p, end_p)) {
     return false;
   }
   // flags
@@ -140,7 +140,7 @@ static inline bool ParseMapsFileLine(char* p, uint64_t& start_addr, uint64_t& en
   shared = *p == 's';
 
   p++;
-  if (!PassSpace(&p)) {
+  if (!PassSpace(&p, end_p)) {
     return false;
   }
   // pgoff
@@ -149,11 +149,11 @@ static inline bool ParseMapsFileLine(char* p, uint64_t& start_addr, uint64_t& en
     return false;
   }
   p = end;
-  if (!PassSpace(&p)) {
+  if (!PassSpace(&p, end_p)) {
     return false;
   }
   // major:minor
-  if (!PassXdigit(&p) || *p++ != ':' || !PassXdigit(&p) || !PassSpace(&p)) {
+  if (!PassXdigit(&p) || *p++ != ':' || !PassXdigit(&p) || !PassSpace(&p, end_p)) {
     return false;
   }
   // inode
@@ -163,7 +163,7 @@ static inline bool ParseMapsFileLine(char* p, uint64_t& start_addr, uint64_t& en
   }
   p = end;
 
-  if (*p != '\0' && !PassSpace(&p)) {
+  if (*p != '\0' && !PassSpace(&p, end_p)) {
     return false;
   }
 
@@ -172,7 +172,7 @@ static inline bool ParseMapsFileLine(char* p, uint64_t& start_addr, uint64_t& en
   return true;
 }
 
-inline bool ReadMapFileContent(char* content, const MapInfoParamsCallback& callback) {
+inline bool ReadMapFileContent(char* content, const char* content_end, const MapInfoParamsCallback& callback) {
   uint64_t start_addr;
   uint64_t end_addr;
   uint16_t flags;
@@ -184,7 +184,7 @@ inline bool ReadMapFileContent(char* content, const MapInfoParamsCallback& callb
   bool shared;
 
   while (line_start != nullptr && *line_start != '\0') {
-    bool parsed = ParseMapsFileLine(line_start, start_addr, end_addr, flags, pgoff,
+    bool parsed = ParseMapsFileLine(line_start, content_end, start_addr, end_addr, flags, pgoff,
                                     inode, &name, shared, &next_line);
     if (!parsed) {
       return false;
@@ -196,7 +196,7 @@ inline bool ReadMapFileContent(char* content, const MapInfoParamsCallback& callb
   return true;
 }
 
-inline bool ReadMapFileContent(char* content, const MapInfoCallback& callback) {
+inline bool ReadMapFileContent(char* content, const char* content_end, const MapInfoCallback& callback) {
   uint64_t start_addr;
   uint64_t end_addr;
   uint16_t flags;
@@ -208,7 +208,7 @@ inline bool ReadMapFileContent(char* content, const MapInfoCallback& callback) {
   bool shared;
 
   while (line_start != nullptr && *line_start != '\0') {
-    bool parsed = ParseMapsFileLine(line_start, start_addr, end_addr, flags, pgoff,
+    bool parsed = ParseMapsFileLine(line_start, content_end, start_addr, end_addr, flags, pgoff,
                                     inode, &name, shared, &next_line);
     if (!parsed) {
       return false;
@@ -226,7 +226,7 @@ inline bool ReadMapFile(const std::string& map_file,
   if (!android::base::ReadFileToString(map_file, &content)) {
     return false;
   }
-  return ReadMapFileContent(&content[0], callback);
+  return ReadMapFileContent(&content[0], &content[content.length() - 1], callback);
 }
 
 inline bool ReadMapFile(const std::string& map_file,
@@ -235,7 +235,7 @@ inline bool ReadMapFile(const std::string& map_file,
   if (!android::base::ReadFileToString(map_file, &content)) {
     return false;
   }
-  return ReadMapFileContent(&content[0], callback);
+  return ReadMapFileContent(&content[0], &content[content.length() - 1], callback);
 }
 
 inline bool ReadProcessMaps(pid_t pid, const MapInfoCallback& callback) {

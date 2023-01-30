@@ -117,7 +117,9 @@ bool BufferMaps::Parse() {
   MapInfo* prev_map = nullptr;
   MapInfo* prev_real_map = nullptr;
   return android::procinfo::ReadMapFileContent(
-      &content[0], [&](const android::procinfo::MapInfo& mapinfo) {
+      &content[0],
+      &content[content.length() - 1],
+      [&](const android::procinfo::MapInfo& mapinfo) {
         // Mark a device map in /dev/ and not in /dev/ashmem/ specially.
         auto flags = mapinfo.flags;
         if (strncmp(mapinfo.name.c_str(), "/dev/", 5) == 0 &&
